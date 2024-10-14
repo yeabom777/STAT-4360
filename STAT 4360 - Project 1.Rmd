@@ -1,0 +1,67 @@
+---
+title: "STAT Project 1"
+author: "Yebom Kim"
+date: "2024-09-09"
+output:
+  word_document: default
+  pdf_document: default
+---
+
+```{r block1}
+setwd("/Users/springkim/Downloads/")
+test_data <- read.csv("1-test_data.csv")
+training_data <- read.csv("1-tranining-data.csv")
+library(ggplot2)
+library(tidyverse)
+library(class)
+#a)
+x_training <- training_data[, -ncol(training_data)]
+y_training <- training_data[, ncol(training_data)]
+x_test <- test_data[, -ncol(test_data)]
+y_test <- test_data[, ncol(test_data)]
+
+k_vals <- seq(1, 200, by = 5)
+output_1a <- data.frame(K = k_vals, Accuracy = numeric(length(k_vals)))
+
+for (i in 1:length(k_vals)) {
+  K <- k_vals[i]
+  y_pred <- knn(train=x_training, test=x_test, cl=y_training, k=K)
+  accuracy <- sum(y_pred == y_test) / length(y_test)
+  output_1a$Accuracy[i] <- accuracy
+}
+plot(output_1a$K, output_1a$Accuracy, type = "b", 
+     xlab = "K", ylab = "Accuracy", main = "KNN and K Value")
+```
+
+```{r block2}
+#b)
+output_1b <- data.frame(K = k_vals, Train_Error = numeric(length(k_vals)), 
+                      Test_Error = numeric(length(k_vals)))
+
+#c)
+opt_index <- which.min(output_1b$Test_Error)
+opt_K <- output_1b$K[opt_index]
+opt_train_error <- output_1b$Train_Error[opt_index]
+opt_test_error <- output_1b$Test_Error[opt_index]
+
+#d)
+x_min <- min(x_training[,1]) - 1
+x_max <- max(x_training[,1]) + 1
+y_min <- min(x_training[,2]) - 1
+y_max <- max(x_training[,2]) + 1
+grid <- expand.grid(seq(x_min, x_max, length.out = 200), seq(y_min, y_max, length.out = 200))
+colnames(grid) <- colnames(x_training)[1:2]
+
+grid_pred <- knn(train = x_training, test = grid, cl = y_training, k = opt_K)
+grid_pred_df <- data.frame(grid, Class = grid_pred)
+
+ggplot() +
+  geom_point(data = as.data.frame(x_training), 
+             aes(x = x_training[, 1], y = x_training[, 2], color = y_training), size = 3) +
+  geom_tile(data = grid_pred_df, 
+            aes(x = x.1, y = x.2, fill = Class), alpha = 0.2) +
+  labs(title = paste("Decision Boundary with K"),
+       x = "x.1", y = "x.2")
+```
+```
+
